@@ -159,7 +159,7 @@ MonoBehaviour:
     m_Value: 2
   intensity:
     m_OverrideState: 1
-    m_Value: 10
+    m_Value: 106.65
     min: 0
   maximumVelocity:
     m_OverrideState: 1
