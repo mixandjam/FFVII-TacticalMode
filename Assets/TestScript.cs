@@ -58,7 +58,7 @@ public class TestScript : MonoBehaviour
         }
 
 
-        if (Input.GetKeyDown(KeyCode.K))
+        if (Input.GetMouseButtonDown(0))
         {
             anim.SetTrigger("slash");
         }
