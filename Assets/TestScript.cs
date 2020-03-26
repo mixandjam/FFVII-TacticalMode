@@ -38,6 +38,8 @@ public class TestScript : MonoBehaviour
 
     public Transform aimObject;
 
+    public float VFXDir = 5;
+
 
     private void Start()
     {
@@ -139,8 +141,19 @@ public class TestScript : MonoBehaviour
 
     public void PlayVFX()
     {
+        hey.SetFloat("PosX", VFXDir);
         hey.SendEvent("OnPlay");
         Camera.main.GetComponent<CinemachineImpulseSource>().GenerateImpulse();
+    }
+
+    public void DirRight()
+    {
+        VFXDir = -5;
+    }
+
+    public void DirLeft()
+    {
+        VFXDir = 5;
     }
 
     public void CancelAction()
