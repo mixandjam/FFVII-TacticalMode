@@ -8,9 +8,25 @@ using DG.Tweening;
 
 public class TestScript : MonoBehaviour
 {
+
+    private MovementInput movement;
+    private Animator anim;
+
+    public bool tacticalMode;
+    public bool isAiming;
+
+    [Space]
+
+    [Header("ATB Data")]
+    public float atbSlider;
+    public float filledAtbValue = 100;
+    public int atbCount;
+
+    [Space]
+
     [Header("Targets in radius")]
     public List<Transform> targets;
-    public int count;
+    public int targetIndex;
 
     [Space]
 
@@ -23,48 +39,102 @@ public class TestScript : MonoBehaviour
     public Transform aimObject;
 
 
+    private void Start()
+    {
+        movement = GetComponent<MovementInput>();
+        anim = GetComponent<Animator>();
+    }
+
     void Update()
     {
-        //if (Input.GetKeyDown(KeyCode.Space))
-        //{
-        //    Time.timeScale = (Time.timeScale == 1) ? .05f : 1;
-        //    DOVirtual.Float(slowMotionVolume.weight, (slowMotionVolume.weight == 0) ? 1 : 0, .2f, SlowmotionPostProcessing).SetUpdate(true);
-        //}
+
+        if (tacticalMode)
+        {
+            if (Input.GetKeyDown(KeyCode.Alpha0))
+                SelectTarget(0);
+
+            if (Input.GetKeyDown(KeyCode.Alpha1))
+                SelectTarget(1);
+        }
+
+
+        if (Input.GetKeyDown(KeyCode.K))
+        {
+            anim.SetTrigger("slash");
+        }
+
+        if (Input.GetKeyDown(KeyCode.K))
+        {
+            ModifyATB(20);
+        }
+
+        if (Input.GetKeyDown(KeyCode.J))
+        {
+            ModifyATB(-20);
+        }
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            if (!targetCam.active)
-            {
-                Time.timeScale = .1f;
-                targetCam.SetActive(true);
-                DOVirtual.Float(0, 1, .3f, SlowmotionPostProcessing).SetUpdate(true);
-                LookAt();
-            }
-            else
-            {
-                DOVirtual.Float(1, 0, .3f, SlowmotionPostProcessing).SetUpdate(true);
-                Time.timeScale = 1;
-                targetCam.SetActive(false);
-            }
-
+            if (atbCount > 0 && !tacticalMode)
+                SetTacticalMode(true);
         }
 
-        if(Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.LeftArrow))
+        if (Input.GetKeyDown(KeyCode.Escape))
         {
-            int direction = (Input.GetKey(KeyCode.RightArrow)) ? 1 : -1;
-            count += direction;
-            if (count > targets.Count - 1)
-                count = 0;
-            if (count < 0)
-                count = targets.Count - 1;
-            LookAt();
-
+            CancelAction();
         }
     }
 
-    public void LookAt()
+    public void ModifyATB(float amount)
     {
-        aimObject.DOLookAt(targets[count].position, .3f).SetUpdate(true);
+        atbSlider += amount;
+        atbSlider = Mathf.Clamp(atbSlider, 0, (filledAtbValue * 2));
+
+        if (atbSlider >= filledAtbValue && atbCount == 0)
+            atbCount = 1;
+        if (atbSlider >= (filledAtbValue*2) && atbCount == 1)
+            atbCount = 2;
+    }
+
+    public void ClearATB()
+    {
+        float value = (atbCount == 1) ? 0 : 1;
+        atbSlider = value;
+    }
+
+    public void SetTacticalMode(bool on)
+    {
+        tacticalMode = on;
+        movement.enabled = !on;
+
+        float time = on ? .1f : 1;
+        Time.timeScale = time;
+
+        //Polish
+        DOVirtual.Float(on ? 0 : 1, on ? 1 : 0, .3f, SlowmotionPostProcessing).SetUpdate(true);
+    }
+
+    public void SelectTarget(int index)
+    {
+        targetIndex = index;
+        SetAimCamera(true);
+        aimObject.DOLookAt(targets[targetIndex].position, .3f).SetUpdate(true);
+    }
+
+    public void SetAimCamera(bool on)
+    {
+        if (!on)
+            StartCoroutine(RecenterCamera());
+        targetCam.SetActive(on);
+        isAiming = on;
+    }
+
+    IEnumerator RecenterCamera()
+    {
+        gameCam.GetComponent<CinemachineFreeLook>().m_RecenterToTargetHeading.m_enabled = true;
+        yield return new WaitForEndOfFrame();
+        yield return new WaitForEndOfFrame();
+        gameCam.GetComponent<CinemachineFreeLook>().m_RecenterToTargetHeading.m_enabled = false;
     }
 
     public void PlayVFX()
@@ -73,6 +143,14 @@ public class TestScript : MonoBehaviour
         Camera.main.GetComponent<CinemachineImpulseSource>().GenerateImpulse();
     }
 
+    public void CancelAction()
+    {
+        if (!targetCam.activeSelf && tacticalMode)
+            SetTacticalMode(false);
+
+        if (targetCam.activeSelf)
+            SetAimCamera(false);
+    }
 
     public void SlowmotionPostProcessing(float x)
     {
@@ -85,6 +163,15 @@ public class TestScript : MonoBehaviour
         if (other.CompareTag("Enemy"))
         {
             targets.Add(other.transform);
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag("Enemy"))
+        {
+            if (targets.Contains(other.transform))
+                targets.Remove(other.transform);
         }
     }
 }
