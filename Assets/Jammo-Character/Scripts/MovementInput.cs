@@ -9,6 +9,7 @@ using UnityEngine;
 public class MovementInput : MonoBehaviour {
 
     public float Velocity;
+	public bool active = true;
     [Space]
 
 	public float InputX;
@@ -62,9 +63,7 @@ public class MovementInput : MonoBehaviour {
 
     }
 
-    void PlayerMoveAndRotation() {
-		InputX = Input.GetAxis ("Horizontal");
-		InputZ = Input.GetAxis ("Vertical");
+    void PlayerMoveAndRotation(float InputX, float InputZ) {
 
 		var camera = Camera.main;
 		var forward = cam.transform.forward;
@@ -103,8 +102,8 @@ public class MovementInput : MonoBehaviour {
 
 	void InputMagnitude() {
 		//Calculate Input Vectors
-		InputX = Input.GetAxis ("Horizontal");
-		InputZ = Input.GetAxis ("Vertical");
+		InputX = active ? Input.GetAxis ("Horizontal") : 0;
+		InputZ = active ? Input.GetAxis ("Vertical") : 0;
 
 		//anim.SetFloat ("InputZ", InputZ, VerticalAnimTime, Time.deltaTime * 2f);
 		//anim.SetFloat ("InputX", InputX, HorizontalAnimSmoothTime, Time.deltaTime * 2f);
@@ -116,7 +115,7 @@ public class MovementInput : MonoBehaviour {
 
 		if (Speed > allowPlayerRotation) {
 			anim.SetFloat ("Blend", Speed, StartAnimTime, Time.deltaTime);
-			PlayerMoveAndRotation ();
+			PlayerMoveAndRotation (InputX, InputZ);
 		} else if (Speed < allowPlayerRotation) {
 			anim.SetFloat ("Blend", Speed, StopAnimTime, Time.deltaTime);
 		}

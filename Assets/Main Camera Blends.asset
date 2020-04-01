@@ -27,8 +27,8 @@ MonoBehaviour:
   - m_From: TargetCamera
     m_To: FreeCamera
     m_Blend:
-      m_Style: 1
-      m_Time: 0.3
+      m_Style: 2
+      m_Time: 0.6
       m_CustomCurve:
         serializedVersion: 2
         m_Curve: []

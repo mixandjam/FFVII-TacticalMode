@@ -11,9 +11,11 @@ public class TestScript : MonoBehaviour
 
     private MovementInput movement;
     private Animator anim;
+    public WeaponCollision weapon;
 
     public bool tacticalMode;
     public bool isAiming;
+    public bool usingAbility;
 
     [Space]
 
@@ -27,24 +29,40 @@ public class TestScript : MonoBehaviour
     [Header("Targets in radius")]
     public List<Transform> targets;
     public int targetIndex;
+    public Transform aimObject;
+
+    [Space]
+    [Header("VFX")]
+    public VisualEffect sparkVFX;
+    public VisualEffect abilityVFX;
+    public VisualEffect abilityHitVFX;
+    public VisualEffect healVFX;
+    [Space]
+    [Header("Ligts")]
+    public Light swordLight;
+    public Light groundLight;
+    [Header("Ligh Colors")]
+    public Color sparkColor;
+    public Color healColor;
+    public Color abilityColot;
+    [Space]
+    [Header("Cameras")]
+    public GameObject gameCam;
+    public CinemachineVirtualCamera targetCam;
 
     [Space]
 
-    public VisualEffect hey;
     public Volume slowMotionVolume;
-
-    public GameObject gameCam;
-    public GameObject targetCam;
-
-    public Transform aimObject;
 
     public float VFXDir = 5;
 
 
     private void Start()
     {
+        weapon.onHit.AddListener((target) => HitTarget(target));
         movement = GetComponent<MovementInput>();
         anim = GetComponent<Animator>();
+        ModifyATB(200);
     }
 
     void Update()
@@ -59,23 +77,45 @@ public class TestScript : MonoBehaviour
                 SelectTarget(1);
         }
 
-
-        if (Input.GetMouseButtonDown(0))
+        if(targets.Count > 0 && !tacticalMode && !usingAbility)
         {
+            targetIndex = NearestTargetToCenter();
+            aimObject.LookAt(targets[targetIndex]);
+        }
+
+        if (Input.GetKeyDown(KeyCode.Z) && tacticalMode)
+        {
+            anim.SetTrigger("heal");
+            LightColor(groundLight, healColor, .5f);
+            usingAbility = true;
+            healVFX.SendEvent("OnPlay");
+            SetTacticalMode(false);
+        }
+
+        if (Input.GetKeyDown(KeyCode.Space) && tacticalMode)
+        {
+            LightColor(groundLight, abilityColot,.3f);
+            usingAbility = true;
+            abilityVFX.SendEvent("OnPlay");
+            SetTacticalMode(false);
+            if (Vector3.Distance(transform.position, targets[targetIndex].position) > 1 && Vector3.Distance(transform.position, targets[targetIndex].position) < 8)
+                transform.DOMove(TargetOffset(), .5f);
+            transform.DOLookAt(targets[targetIndex].position, .2f);
+            anim.SetTrigger("ability");
+        }
+
+        //Attack
+        if (Input.GetMouseButtonDown(0) && !tacticalMode)
+        {
+            if (Vector3.Distance(transform.position, targets[targetIndex].position) >2 && Vector3.Distance(transform.position, targets[targetIndex].position) < 8) {
+                transform.DOMove(TargetOffset(), .3f).SetEase(Ease.InQuart);
+                transform.DOLookAt(targets[targetIndex].position, .2f);
+            }
             anim.SetTrigger("slash");
         }
 
-        if (Input.GetKeyDown(KeyCode.K))
-        {
-            ModifyATB(20);
-        }
 
-        if (Input.GetKeyDown(KeyCode.J))
-        {
-            ModifyATB(-20);
-        }
-
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetMouseButtonDown(1))
         {
             if (atbCount > 0 && !tacticalMode)
                 SetTacticalMode(true);
@@ -85,6 +125,28 @@ public class TestScript : MonoBehaviour
         {
             CancelAction();
         }
+    }
+
+    public Vector3 TargetOffset()
+    {
+        Vector3 position;
+        position = targets[targetIndex].position;
+        return Vector3.MoveTowards(position, transform.position, 1.2f);
+    }
+
+    public void HitTarget(Transform x)
+    {
+        PlayVFX(sparkVFX, true);
+        if (usingAbility)
+            PlayVFX(abilityHitVFX, false);
+
+        ModifyATB(10);
+
+        LightColor(swordLight, sparkColor, .1f);
+
+        print(x);
+        if (x.GetComponent<Animator>() != null)
+            x.GetComponent<Animator>().SetTrigger("hit");
     }
 
     public void ModifyATB(float amount)
@@ -106,8 +168,13 @@ public class TestScript : MonoBehaviour
 
     public void SetTacticalMode(bool on)
     {
+        movement.desiredRotationSpeed = on ? 0 : .3f;
+        movement.active = !on;
+
         tacticalMode = on;
-        movement.enabled = !on;
+        if (on == false)
+            SetAimCamera(false);
+        //movement.enabled = !on;
 
         float time = on ? .1f : 1;
         Time.timeScale = time;
@@ -125,9 +192,9 @@ public class TestScript : MonoBehaviour
 
     public void SetAimCamera(bool on)
     {
-        if (!on)
-            StartCoroutine(RecenterCamera());
-        targetCam.SetActive(on);
+        targetCam.LookAt = on ? aimObject : null;
+        targetCam.Follow = on ? aimObject : null;
+        targetCam.gameObject.SetActive(on);
         isAiming = on;
     }
 
@@ -139,10 +206,16 @@ public class TestScript : MonoBehaviour
         gameCam.GetComponent<CinemachineFreeLook>().m_RecenterToTargetHeading.m_enabled = false;
     }
 
-    public void PlayVFX()
+    public void PlayVFX(VisualEffect visualEffect, bool shakeCamera)
     {
-        hey.SetFloat("PosX", VFXDir);
-        hey.SendEvent("OnPlay");
+        if (visualEffect == abilityHitVFX)
+            LightColor(groundLight, abilityColot, .2f);
+
+        if(visualEffect == sparkVFX)
+            visualEffect.SetFloat("PosX", VFXDir);
+        visualEffect.SendEvent("OnPlay");
+
+        if(shakeCamera)
         Camera.main.GetComponent<CinemachineImpulseSource>().GenerateImpulse();
     }
 
@@ -158,13 +231,37 @@ public class TestScript : MonoBehaviour
 
     public void CancelAction()
     {
-        if (!targetCam.activeSelf && tacticalMode)
+        if (!targetCam.gameObject.activeSelf && tacticalMode)
             SetTacticalMode(false);
 
-        if (targetCam.activeSelf)
+        if (targetCam.gameObject.activeSelf)
             SetAimCamera(false);
     }
 
+    int NearestTargetToCenter()
+    {
+        float[] distances = new float[targets.Count];
+
+        for (int i = 0; i < targets.Count; i++)
+        {
+            distances[i] = Vector2.Distance(Camera.main.WorldToScreenPoint(targets[i].position), new Vector2(Screen.width / 2, Screen.height / 2));
+        }
+
+        float minDistance = Mathf.Min(distances);
+        int index = 0;
+
+        for (int i = 0; i < distances.Length; i++)
+        {
+            if (minDistance == distances[i])
+                index = i;
+        }
+        return index;
+    }
+
+    public void LightColor(Light l, Color x, float time)
+    {
+        l.DOColor(x, time).OnComplete(() => l.DOColor(Color.black, time));   
+    }
     public void SlowmotionPostProcessing(float x)
     {
         slowMotionVolume.weight = x;
