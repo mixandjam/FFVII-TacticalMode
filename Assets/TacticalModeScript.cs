@@ -15,6 +15,8 @@ public class TacticalModeScript : MonoBehaviour
     [HideInInspector]
     public GameEvent OnAttack;
     [HideInInspector]
+    public GameEvent OnModificationATB;
+    [HideInInspector]
     public TacticalModeEvent OnTacticalTrigger;
     [HideInInspector]
     public TacticalModeEvent OnTargetSelectTrigger;
@@ -110,7 +112,7 @@ public class TacticalModeScript : MonoBehaviour
 
     public void SpinAttack()
     {
-        ModifyATB(-130);
+        ModifyATB(-100);
 
         StartCoroutine(AbilityCooldown());
 
@@ -128,7 +130,7 @@ public class TacticalModeScript : MonoBehaviour
 
     public void Heal()
     {
-        ModifyATB(-130);
+        ModifyATB(-100);
 
         StartCoroutine(AbilityCooldown());
 
@@ -179,7 +181,7 @@ public class TacticalModeScript : MonoBehaviour
         if (usingAbility)
             PlayVFX(abilityHitVFX, true, 4,4, .3f);
 
-        ModifyATB(30);
+        ModifyATB(25);
 
         LightColor(swordLight, sparkColor, .1f);
 
@@ -191,6 +193,8 @@ public class TacticalModeScript : MonoBehaviour
 
     public void ModifyATB(float amount)
     {
+        OnModificationATB.Invoke();
+
         atbSlider += amount;
         atbSlider = Mathf.Clamp(atbSlider, 0, (filledAtbValue * 2));
 

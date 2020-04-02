@@ -20,11 +20,15 @@ public class UIManager : MonoBehaviour
     public CanvasGroup aimCanvas;
     public bool aimAtTarget;
 
+    public Slider atbSlider;
+    public Image atbCompleteLeft;
+    public Image atbCompleteRight;
     void Start()
     {
 
         gameScript = FindObjectOfType<TacticalModeScript>();
         gameScript.OnAttack.AddListener(() => AttackAction());
+        gameScript.OnModificationATB.AddListener(() => UpdateSlider());
         gameScript.OnTacticalTrigger.AddListener((x) => ShowTacticalMenu(x));
         gameScript.OnTargetSelectTrigger.AddListener((x) => ShowTargetOptions(x));
     }
@@ -39,8 +43,16 @@ public class UIManager : MonoBehaviour
 
     public void AttackAction()
     {
-        test.transform.DOComplete();
-        test.transform.DOPunchPosition(Vector3.right/2, .3f, 10, 1);
+
+    }
+
+    public void UpdateSlider()
+    {
+        atbSlider.DOComplete();
+        atbSlider.DOValue(gameScript.atbSlider,.15f);
+
+        atbCompleteLeft.DOFade(gameScript.atbSlider >= 100 ? 1 : 0, .2f);
+        atbCompleteRight.DOFade(gameScript.atbSlider >= 200 ? 1 : 0, .2f);
     }
 
     public void ShowTacticalMenu(bool on)
@@ -60,7 +72,7 @@ public class UIManager : MonoBehaviour
         {
             EventSystem.current.SetSelectedGameObject(attackCanvas.transform.GetChild(0).gameObject);
             commandsGroup.gameObject.SetActive(!on);
-            targetGroup.gameObject.SetActive(on);
+            //targetGroup.gameObject.SetActive(on);
         }
     }
 
@@ -72,7 +84,8 @@ public class UIManager : MonoBehaviour
         aimCanvas.alpha = on ? 1 : 0;
 
         commandsGroup.gameObject.SetActive(!on);
-        targetGroup.gameObject.SetActive(on);
+        targetGroup.GetComponent<CanvasGroup>().DOFade(on ? 1 : 0, .1f).SetUpdate(true);
+        targetGroup.GetComponent<CanvasGroup>().interactable = on;
 
         if (on)
         {
