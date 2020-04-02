@@ -36,16 +36,20 @@ public class MovementInput : MonoBehaviour {
 
     public float verticalVel;
     private Vector3 moveVector;
-
+	private TacticalModeScript gameScript;
 	// Use this for initialization
 	void Start () {
 		anim = this.GetComponent<Animator> ();
 		cam = Camera.main;
 		controller = this.GetComponent<CharacterController> ();
+		gameScript = GetComponent<TacticalModeScript>();
 	}
 	
 	// Update is called once per frame
 	void Update () {
+
+		if (gameScript.usingAbility)
+			return;
 		InputMagnitude ();
 
         isGrounded = controller.isGrounded;
@@ -58,6 +62,7 @@ public class MovementInput : MonoBehaviour {
             verticalVel -= 1;
         }
         moveVector = new Vector3(0, verticalVel * .2f * Time.deltaTime, 0);
+
         controller.Move(moveVector);
 
 
