@@ -213,7 +213,7 @@ Material:
     - _HeightTessAmplitude: 2
     - _HeightTessCenter: 0.5
     - _InitialBend: 1
-    - _InvTilingScale: 1
+    - _InvTilingScale: 0.33333334
     - _Ior: 1
     - _IridescenceMask: 1
     - _IridescenceThickness: 1
