@@ -257,6 +257,9 @@ public class TacticalModeScript : MonoBehaviour
 
     public void SetAimCamera(bool on)
     {
+        if (targets.Count < 1)
+            return;
+
         OnTargetSelectTrigger.Invoke(on);
 
         targetCam.LookAt = on ? aimObject : null;
