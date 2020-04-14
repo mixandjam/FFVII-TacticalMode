@@ -25,6 +25,11 @@ public class TacticalModeScript : MonoBehaviour
     private Animator anim;
     public WeaponCollision weapon;
 
+    [Header("Time Stats")]
+    public float slowMotionTime = .005f;
+
+    [Space]
+
     public bool tacticalMode;
     public bool isAiming;
     public bool usingAbility;
@@ -240,7 +245,7 @@ public class TacticalModeScript : MonoBehaviour
 
         camImpulseSource.m_ImpulseDefinition.m_AmplitudeGain = on ? 0 : 2;
 
-        float time = on ? .02f : 1;
+        float time = on ? slowMotionTime : 1;
         Time.timeScale = time;
 
         //Polish
