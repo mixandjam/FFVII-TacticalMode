@@ -6,7 +6,7 @@
 # Final Fantasy VII Remake's Tactical Mode | Mix and Jam [![Discord Chat](https://img.shields.io/discord/308323056592486420.svg)](https://discord.gg/PwCzrBX) <a href="https://patreon.com/mixandjam"><img src="https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-patreon.herokuapp.com%2Fmixandjam" /></a>
 
 <p align="center">
-<img width="900px" src="http://mixandjam.com/wp-content/uploads/2020/04/banner.png">
+<img width="900px" src="https://github.com/mixandjam/FFVII-TacticalMode/blob/master/git-banner.png">
 </p>
 
 This is the official respository for the episode <b>#23</b> of the [Mix and Jam Youtube Channel](https://www.youtube.com/c/MixAndJam)!
